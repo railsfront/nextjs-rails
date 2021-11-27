@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+    frontend:
+        image: node:12
+        volumes:
+            - ./frontend:/var/www/app:cached
+        working_dir: /var/www/app
+        ports:
+            - "8080:8080"
+        command:
+            [
+                "sh",
+                "-c",
+                "yarn install --ignore-optional --frozen-lockfile && yarn dev",
+            ]
