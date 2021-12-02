@@ -5,6 +5,9 @@ services:
         volumes:
             - ./frontend:/var/www/app:cached
         working_dir: /var/www/app
+        depends_on:
+            - backend
+            - postgres
         ports:
             - "8080:8080"
         command:
@@ -13,3 +16,35 @@ services:
                 "-c",
                 "yarn install --ignore-optional --frozen-lockfile && yarn dev",
             ]
+    backend:
+        image: iqbalhasnan/rails-6-dev:latest
+        tty: true
+        stdin_open: true
+        depends_on:
+            - postgres
+        volumes:
+            - ./backend:/var/www/app:cached
+        ports:
+            - "3000:3000"
+        command: ["sh", "-c", "bundle exec puma -C config/puma.rb"]
+    backend_bundler:
+        image: iqbalhasnan/rails-6-dev:latest
+        depends_on:
+            - postgres
+        volumes:
+            - ./backend:/var/www/app:cached
+        command:
+            [
+                "sh",
+                "-c",
+                "(bundle check || bundle install) && ((bundle exec rake db:migrate 2>/dev/null) || (bundle exec rake db:create db:structure:load db:migrate db:seed))",
+            ]
+        restart: "no"
+    postgres:
+        image: postgres:13
+        environment:
+            POSTGRES_HOST_AUTH_METHOD: trust
+        volumes:
+            - ./data/db:/var/lib/postgresql/data
+        ports:
+            - "65432:5432"
